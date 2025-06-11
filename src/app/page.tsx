@@ -1,11 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ModelPanel from '@/components/ModelPanel';
 import { LLMResponse, ComparisonResult } from '@/types/api';
+import { saveComparisonResults, loadComparisonResults } from '@/lib/storage';
 
 export default function Home() {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
+
+  // Load saved results on component mount
+  useEffect(() => {
+    const savedResults = loadComparisonResults();
+    if (savedResults.length > 0) {
+      setComparisonResults(savedResults);
+    }
+  }, []);
+
+  // Save results whenever they change
+  useEffect(() => {
+    if (comparisonResults.length > 0) {
+      saveComparisonResults(comparisonResults);
+    }
+  }, [comparisonResults]);
 
   const handleResponse = (modelNumber: number, response: LLMResponse) => {
     setComparisonResults((prev) => {
@@ -32,10 +48,25 @@ export default function Home() {
     });
   };
 
+  const clearHistory = () => {
+    setComparisonResults([]);
+    localStorage.removeItem('llm-comparer-history');
+  };
+
   return (
     <main className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">LLM Comparer</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold">LLM Comparer</h1>
+          {comparisonResults.length > 0 && (
+            <button
+              onClick={clearHistory}
+              className="px-4 py-2 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-50"
+            >
+              Clear History
+            </button>
+          )}
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <ModelPanel modelNumber={1} onResponse={(r) => handleResponse(1, r)} />
