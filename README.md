@@ -36,7 +36,3 @@ A modern web application that allows users to compare responses from different L
    ```bash
    npm run dev
    ```
-
-## License
-
-MIT
