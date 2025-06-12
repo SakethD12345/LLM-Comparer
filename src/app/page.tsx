@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import ModelPanel from '@/components/ModelPanel';
+import StorageTest from '@/components/StorageTest';
 import { LLMResponse, ComparisonResult } from '@/types/api';
 import { saveComparisonResults, loadComparisonResults } from '@/lib/storage';
 
@@ -98,6 +99,7 @@ export default function Home() {
           </div>
         )}
       </div>
+      <StorageTest />
     </main>
   );
 } 
