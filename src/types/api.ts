@@ -3,7 +3,7 @@ export interface LLMResponse {
   model: string;
   error?: string;
 }
-
+ 
 export interface ComparisonResult {
   model1: LLMResponse;
   model2: LLMResponse;

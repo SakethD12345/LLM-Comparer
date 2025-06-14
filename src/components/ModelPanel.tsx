@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AVAILABLE_MODELS } from '@/lib/api';
+import { AVAILABLE_MODELS, MODEL_INFO } from '@/lib/api';
 import { LLMResponse } from '@/types/api';
 
 interface ModelPanelProps {
@@ -49,21 +49,52 @@ export default function ModelPanel({ modelNumber, onResponse }: ModelPanelProps)
     }
   };
 
+  const modelInfo = MODEL_INFO[selectedModel];
+
   return (
     <div className="p-6 border rounded-lg shadow-sm">
       <h2 className="text-2xl font-semibold mb-4">Model {modelNumber}</h2>
       
-      <select
-        value={selectedModel}
-        onChange={(e) => setSelectedModel(e.target.value)}
-        className="w-full p-2 mb-4 border rounded-lg"
-      >
-        {AVAILABLE_MODELS.map((model) => (
-          <option key={model} value={model}>
-            {model}
-          </option>
-        ))}
-      </select>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Select Model
+        </label>
+        <select
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+          className="w-full p-2 border rounded-lg"
+        >
+          {AVAILABLE_MODELS.map((model) => (
+            <option key={model} value={model}>
+              {MODEL_INFO[model].name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {modelInfo && (
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-semibold text-lg mb-2">{modelInfo.name}</h3>
+          <p className="text-sm text-gray-600 mb-2">{modelInfo.description}</p>
+          <div className="mb-2">
+            <span className="text-sm font-medium">Size: </span>
+            <span className="text-sm text-gray-600">{modelInfo.size}</span>
+          </div>
+          <div>
+            <span className="text-sm font-medium">Capabilities: </span>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {modelInfo.capabilities.map((capability) => (
+                <span
+                  key={capability}
+                  className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
+                >
+                  {capability}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <textarea
         value={prompt}
