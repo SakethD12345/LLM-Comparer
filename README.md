@@ -1,38 +1,69 @@
-# LLM Comparer
+# 🤖 LLM Comparer
 
-A modern web application that allows users to compare responses from different Large Language Models (LLMs) side by side. This tool helps in evaluating and analyzing the performance, quality, and characteristics of various LLM outputs.
+A modern web application for comparing responses from different Large Language Models (LLMs). Built with React, TypeScript, and Tailwind CSS.
 
-## Features (Planned)
+## Features
 
-- Side-by-side comparison of LLM responses
-- Support for multiple open-source LLMs and free tiers
-- Customizable prompts and parameters
-- Response analysis and metrics
-- Save and share comparison results
-- Beautiful, responsive UI
+- Side-by-side model comparison
+- Rich model information display
+- Support for multiple free models
+- Response history tracking
+- Modern, responsive UI
+- Type-safe development
+
+## Live Demo
+
+[Add your deployed application link here]
 
 ## Tech Stack
 
-- Next.js 14
+- React 18
 - TypeScript
 - Tailwind CSS
-- Hugging Face Inference API 
-- Local LLM support
-- GitHub Pages
+- Hugging Face API
+- Python (for advanced analysis)
+- Machine Learning Libraries:
+  - scikit-learn
+  - NLTK
+  - matplotlib
+  - seaborn
+  - wordcloud
+  - networkx
+
+## Project Structure
+
+```
+src/
+├── components/     # React components
+├── lib/           # Core functionality and API
+├── styles/        # Global styles
+└── types/         # TypeScript type definitions
+```
 
 ## Getting Started
 
-1. Clone the repository
-2. Install dependencies:
+1. Install dependencies:
    ```bash
    npm install
    ```
-3. Set up environment variables:
-   ```bash
-   cp .env.example .env.local
-   ```
-4. Add your Hugging Face API token to `.env.local` (free tier)
-5. Run the development server:
+
+2. Start the development server:
    ```bash
    npm run dev
    ```
+
+3. Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## Testing
+
+```bash
+npm test
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Hugging Face for providing access to various LLM models
