@@ -5,11 +5,14 @@ import ModelPanel from '@/components/ModelPanel';
 import StorageTest from '@/components/StorageTest';
 import { LLMResponse, ComparisonResult } from '@/types/api';
 import { saveComparisonResults, loadComparisonResults } from '@/lib/storage';
+import AnalysisResults from '@/components/AnalysisResults';
 
 export default function Home() {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
   const [response1, setResponse1] = useState<LLMResponse | null>(null);
   const [response2, setResponse2] = useState<LLMResponse | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<any>(null);
 
   // Load saved results on component mount
   useEffect(() => {
@@ -51,6 +54,37 @@ export default function Home() {
     });
   };
 
+  const handleAnalyze = async () => {
+    if (!response1 || !response2) return;
+
+    setIsAnalyzing(true);
+    try {
+      const analysisResponse = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          response1: response1.text,
+          response2: response2.text,
+          model1: response1.model,
+          model2: response2.model,
+        }),
+      });
+
+      if (!analysisResponse.ok) {
+        throw new Error('Failed to analyze responses');
+      }
+
+      const data = await analysisResponse.json();
+      setAnalysisResults(data);
+    } catch (error) {
+      console.error('Error analyzing responses:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const clearHistory = () => {
     setComparisonResults([]);
     localStorage.removeItem('llm-comparer-history');
@@ -83,6 +117,20 @@ export default function Home() {
             otherResponse={response1}
           />
         </div>
+
+        {response1 && response2 && (
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
+            >
+              {isAnalyzing ? 'Analyzing...' : 'Compare Responses'}
+            </button>
+          </div>
+        )}
+
+        <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
 
         {comparisonResults.length > 0 && (
           <div className="mt-8">

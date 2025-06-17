@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AVAILABLE_MODELS, MODEL_INFO } from '@/lib/api';
 import { LLMResponse } from '@/types/api';
-import AnalysisResults from './AnalysisResults';
 
 interface ModelPanelProps {
   modelNumber: number;
@@ -14,8 +13,6 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<LLMResponse | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<any>(null);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) return;
@@ -38,48 +35,27 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
       }
 
       const data = await response.json();
-      setResponse(data);
-      onResponse(data);
+      console.log('API Response:', data); // Debug log
+
+      const llmResponse: LLMResponse = {
+        text: data.response || data.text || '', // Try both possible response formats
+        model: selectedModel,
+      };
+      console.log('Formatted Response:', llmResponse); // Debug log
+      
+      setResponse(llmResponse);
+      onResponse(llmResponse);
     } catch (error) {
       console.error('Error generating response:', error);
-      setResponse({
+      const errorResponse: LLMResponse = {
         text: '',
         model: selectedModel,
-        error: error instanceof Error ? error.message : 'An error occurred',
-      });
+        error: 'Failed to generate response',
+      };
+      setResponse(errorResponse);
+      onResponse(errorResponse);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleAnalyze = async () => {
-    if (!response || !otherResponse) return;
-
-    setIsAnalyzing(true);
-    try {
-      const analysisResponse = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          response1: response.text,
-          response2: otherResponse.text,
-          model1: response.model,
-          model2: otherResponse.model,
-        }),
-      });
-
-      if (!analysisResponse.ok) {
-        throw new Error('Failed to analyze responses');
-      }
-
-      const data = await analysisResponse.json();
-      setAnalysisResults(data);
-    } catch (error) {
-      console.error('Error analyzing responses:', error);
-    } finally {
-      setIsAnalyzing(false);
     }
   };
 
@@ -155,18 +131,6 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
           )}
         </div>
       )}
-
-      {response && otherResponse && (
-        <button
-          onClick={handleAnalyze}
-          disabled={isAnalyzing}
-          className="w-full p-2 mt-4 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
-        >
-          {isAnalyzing ? 'Analyzing...' : 'Compare Responses'}
-        </button>
-      )}
-
-      <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
     </div>
   );
 } 
