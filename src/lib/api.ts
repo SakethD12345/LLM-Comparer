@@ -11,88 +11,88 @@ export interface ModelInfo {
 }
 
 export const MODEL_INFO: Record<string, ModelInfo> = {
-  'gpt2': {
-    id: 'gpt2',
-    name: 'GPT-2',
-    description: 'A smaller, more accessible model for testing',
-    capabilities: ['Text Generation', 'Basic Language Tasks'],
-    size: '117M parameters'
+  'llama2': {
+    id: 'llama2',
+    name: 'Llama 2',
+    description: 'Meta\'s Llama 2 model, available via Ollama.',
+    capabilities: ['Text Generation', 'General Purpose'],
+    size: '7B/13B/70B parameters (varies by Ollama model)'
   },
-  'facebook/opt-125m': {
-    id: 'facebook/opt-125m',
-    name: 'OPT 125M',
-    description: 'Small OPT model hosted for testing purposes',
-    capabilities: ['Text Generation', 'Basic Language Tasks'],
-    size: '125M parameters'
+  'llama3': {
+    id: 'llama3',
+    name: 'Llama 3',
+    description: 'Meta\'s latest Llama 3 model, available via Ollama.',
+    capabilities: ['Text Generation', 'General Purpose'],
+    size: '8B/70B parameters'
   },
-  'bigscience/bloom-560m': {
-    id: 'bigscience/bloom-560m',
-    name: 'BLOOM 560M',
-    description: 'Multilingual autoregressive model from BigScience',
-    capabilities: ['Text Generation', 'Multilingual Support'],
-    size: '560M parameters'
+  'mistral': {
+    id: 'mistral',
+    name: 'Mistral',
+    description: 'Mistral 7B model, available via Ollama.',
+    capabilities: ['Text Generation', 'General Purpose'],
+    size: '7B parameters'
   },
-  'google/flan-t5-base': {
-    id: 'google/flan-t5-base',
-    name: 'FLAN-T5 Base',
-    description: 'Google\'s instruction-tuned encoder-decoder model',
-    capabilities: ['Text Generation', 'Instruction Following', 'Q&A'],
-    size: '250M parameters'
+  'phi3': {
+    id: 'phi3',
+    name: 'Phi-3',
+    description: 'Microsoft\'s Phi-3 model, available via Ollama.',
+    capabilities: ['Text Generation', 'General Purpose'],
+    size: '3.8B/14B parameters'
+  },
+  'qwen2': {
+    id: 'qwen2',
+    name: 'Qwen2',
+    description: 'Alibaba\'s Qwen2 model, available via Ollama.',
+    capabilities: ['Text Generation', 'Multilingual'],
+    size: '0.5B/1.5B/7B/72B parameters'
+  },
+  'gemma': {
+    id: 'gemma',
+    name: 'Gemma',
+    description: 'Google DeepMind\'s Gemma model, available via Ollama.',
+    capabilities: ['Text Generation', 'General Purpose'],
+    size: '2B/7B parameters'
+  },
+  'deepseek-coder': {
+    id: 'deepseek-coder',
+    name: 'DeepSeek Coder',
+    description: 'DeepSeek Coder model, available via Ollama.',
+    capabilities: ['Text Generation', 'Reasoning', 'Coding'],
+    size: '7B/67B parameters'
+  },
+  'dolphin-mistral': {
+    id: 'dolphin-mistral',
+    name: 'Dolphin Mistral',
+    description: 'Uncensored Dolphin model based on Mistral.',
+    capabilities: ['Text Generation', 'General Purpose'],
+    size: '7B parameters'
+  },
+  'llava': {
+    id: 'llava',
+    name: 'LLaVA',
+    description: 'Large Language and Vision Assistant (multimodal).',
+    capabilities: ['Text Generation', 'Vision'],
+    size: '7B/13B/34B parameters'
   }
 };
 
 export const AVAILABLE_MODELS = Object.keys(MODEL_INFO) as Array<keyof typeof MODEL_INFO>;
 
-export async function queryModel(
-  prompt: string,
-  model: string,
-  apiKey: string // We'll keep this parameter for compatibility but won't use it
-): Promise<LLMResponse> {
-  try {
-    const url = `${VLLM_API_URL}/generate`;
-    console.log('Making request to:', url);
+export async function queryModel(prompt: string, model: string = "llama2") {
+  const response = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt, model }),
+  });
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt,
-        model,
-        max_new_tokens: 100,
-        temperature: 0.7,
-        top_p: 0.95,
-        do_sample: true
-      }),
-    });
-
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      console.error('Error response:', errorData);
-      throw new Error(
-        `API request failed: ${response.status} ${response.statusText}${
-          errorData ? ` - ${JSON.stringify(errorData)}` : ''
-        }`
-      );
-    }
-
-    const data = await response.json();
-    console.log('Success response:', data);
-
-    return {
-      text: data.text,
-      model,
-    };
-  } catch (error) {
-    console.error('Error in queryModel:', error);
-    return {
-      text: '',
-      model,
-      error: error instanceof Error ? error.message : 'An unknown error occurred',
-    };
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.status}`);
   }
+
+  const data = await response.json();
+  return {
+    text: data.text,
+    model: model,
+    error: null
+  };
 }

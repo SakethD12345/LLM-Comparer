@@ -8,6 +8,8 @@ import { saveComparisonResults, loadComparisonResults } from '@/lib/storage';
 
 export default function Home() {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
+  const [response1, setResponse1] = useState<LLMResponse | null>(null);
+  const [response2, setResponse2] = useState<LLMResponse | null>(null);
 
   // Load saved results on component mount
   useEffect(() => {
@@ -70,8 +72,16 @@ export default function Home() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <ModelPanel modelNumber={1} onResponse={(r) => handleResponse(1, r)} />
-          <ModelPanel modelNumber={2} onResponse={(r) => handleResponse(2, r)} />
+          <ModelPanel
+            modelNumber={1}
+            onResponse={setResponse1}
+            otherResponse={response2}
+          />
+          <ModelPanel
+            modelNumber={2}
+            onResponse={setResponse2}
+            otherResponse={response1}
+          />
         </div>
 
         {comparisonResults.length > 0 && (

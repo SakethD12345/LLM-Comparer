@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import { AVAILABLE_MODELS, MODEL_INFO } from '@/lib/api';
 import { LLMResponse } from '@/types/api';
+import AnalysisResults from './AnalysisResults';
 
 interface ModelPanelProps {
   modelNumber: number;
   onResponse: (response: LLMResponse) => void;
+  otherResponse?: LLMResponse | null;
 }
 
-export default function ModelPanel({ modelNumber, onResponse }: ModelPanelProps) {
+export default function ModelPanel({ modelNumber, onResponse, otherResponse }: ModelPanelProps) {
   const [prompt, setPrompt] = useState('');
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<LLMResponse | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<any>(null);
 
   const handleSubmit = async () => {
     if (!prompt.trim()) return;
@@ -45,6 +49,37 @@ export default function ModelPanel({ modelNumber, onResponse }: ModelPanelProps)
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!response || !otherResponse) return;
+
+    setIsAnalyzing(true);
+    try {
+      const analysisResponse = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          response1: response.text,
+          response2: otherResponse.text,
+          model1: response.model,
+          model2: otherResponse.model,
+        }),
+      });
+
+      if (!analysisResponse.ok) {
+        throw new Error('Failed to analyze responses');
+      }
+
+      const data = await analysisResponse.json();
+      setAnalysisResults(data);
+    } catch (error) {
+      console.error('Error analyzing responses:', error);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -105,7 +140,7 @@ export default function ModelPanel({ modelNumber, onResponse }: ModelPanelProps)
       <button
         onClick={handleSubmit}
         disabled={isLoading || !prompt.trim()}
-        className="w-full p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+        className="w-full p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 mb-4"
       >
         {isLoading ? 'Generating...' : 'Generate Response'}
       </button>
@@ -120,6 +155,18 @@ export default function ModelPanel({ modelNumber, onResponse }: ModelPanelProps)
           )}
         </div>
       )}
+
+      {response && otherResponse && (
+        <button
+          onClick={handleAnalyze}
+          disabled={isAnalyzing}
+          className="w-full p-2 mt-4 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
+        >
+          {isAnalyzing ? 'Analyzing...' : 'Compare Responses'}
+        </button>
+      )}
+
+      <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
     </div>
   );
 } 
