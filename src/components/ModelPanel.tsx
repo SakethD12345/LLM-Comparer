@@ -18,11 +18,6 @@ export default function ModelPanel({ modelNumber, onResponse }: ModelPanelProps)
 
     setIsLoading(true);
     try {
-      const apiKey = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY;
-      if (!apiKey) {
-        throw new Error('API key not found');
-      }
-
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -33,6 +28,10 @@ export default function ModelPanel({ modelNumber, onResponse }: ModelPanelProps)
           model: selectedModel,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate response');
+      }
 
       const data = await response.json();
       setResponse(data);
