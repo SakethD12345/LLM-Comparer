@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 
 export async function POST(request: Request) {
+  let tempFile = '';
   try {
     const { response1, response2, model1, model2 } = await request.json();
     
     // Create a temporary file with the responses
-    const tempFile = path.join(process.cwd(), 'temp_comparison.json');
-    const fs = require('fs');
+    tempFile = path.join(process.cwd(), 'temp_comparison.json');
     fs.writeFileSync(tempFile, JSON.stringify([{
       timestamp: new Date().toISOString(),
       model1: { model: model1, text: response1 },
@@ -34,8 +35,14 @@ export async function POST(request: Request) {
       });
 
       pythonProcess.on('close', (code) => {
-        // Clean up the temporary file
-        fs.unlinkSync(tempFile);
+        // Clean up the temporary file if it exists
+        try {
+          if (fs.existsSync(tempFile)) {
+            fs.unlinkSync(tempFile);
+          }
+        } catch (cleanupError) {
+          console.error('Error cleaning up temporary file:', cleanupError);
+        }
         
         if (code !== 0) {
           reject(NextResponse.json(
@@ -57,6 +64,15 @@ export async function POST(request: Request) {
       });
     });
   } catch (error) {
+    // Clean up the temporary file if it exists
+    try {
+      if (tempFile && fs.existsSync(tempFile)) {
+        fs.unlinkSync(tempFile);
+      }
+    } catch (cleanupError) {
+      console.error('Error cleaning up temporary file:', cleanupError);
+    }
+
     console.error('Error in analyze route:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to analyze responses' },
