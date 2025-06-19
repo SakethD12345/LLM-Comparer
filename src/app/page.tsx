@@ -59,7 +59,7 @@ export default function Home() {
 
     setIsAnalyzing(true);
     try {
-      const analysisResponse = await fetch('/api/analyze', {
+      const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,12 +72,12 @@ export default function Home() {
         }),
       });
 
-      if (!analysisResponse.ok) {
-        throw new Error('Failed to analyze responses');
+      if (!response.ok) {
+        throw new Error('Analysis failed');
       }
 
-      const data = await analysisResponse.json();
-      setAnalysisResults(data);
+      const results = await response.json();
+      setAnalysisResults(results);
     } catch (error) {
       console.error('Error analyzing responses:', error);
     } finally {
@@ -91,73 +91,71 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">LLM Comparer</h1>
-          {comparisonResults.length > 0 && (
-            <button
-              onClick={clearHistory}
-              className="px-4 py-2 text-sm text-red-600 border border-red-600 rounded-lg hover:bg-red-50"
-            >
-              Clear History
-            </button>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            LLM Comparer
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Compare responses from different language models side by side. 
+            Generate responses, analyze similarities, and gain insights into model performance.
+          </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <ModelPanel
-            modelNumber={1}
+
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-2 gap-8 mb-8">
+          <ModelPanel 
+            modelNumber={1} 
             onResponse={setResponse1}
             otherResponse={response2}
           />
-          <ModelPanel
-            modelNumber={2}
+          <ModelPanel 
+            modelNumber={2} 
             onResponse={setResponse2}
             otherResponse={response1}
           />
         </div>
 
+        {/* Compare Button */}
         {response1 && response2 && (
           <div className="flex justify-center mb-8">
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing}
-              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300"
+              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {isAnalyzing ? 'Analyzing...' : 'Compare Responses'}
+              {isAnalyzing ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Analyzing...
+                </div>
+              ) : (
+                '🔍 Compare Responses'
+              )}
             </button>
           </div>
         )}
 
-        <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
-
-        {comparisonResults.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4">Comparison History</h2>
-            <div className="space-y-4">
-              {comparisonResults.map((result, index) => (
-                <div key={index} className="p-4 border rounded-lg">
-                  <p className="text-sm text-gray-500 mb-2">
-                    {new Date(result.timestamp).toLocaleString()}
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h3 className="font-semibold">Model 1 ({result.model1.model})</h3>
-                      <p className="whitespace-pre-wrap">{result.model1.text}</p>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Model 2 ({result.model2.model})</h3>
-                      <p className="whitespace-pre-wrap">{result.model2.text}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Analysis Results */}
+        {analysisResults && (
+          <div className="max-w-4xl mx-auto">
+            <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
           </div>
         )}
+
+        {/* Footer */}
+        <div className="text-center mt-16 pt-8 border-t border-gray-200">
+          <p className="text-gray-500">
+            Built with Next.js, FastAPI, and Ollama • 
+            <a href="https://github.com/SakethD12345/LLM-Comparer" className="text-blue-500 hover:text-blue-600 ml-1">
+              View on GitHub
+            </a>
+          </p>
+        </div>
       </div>
       <StorageTest />
-    </main>
+    </div>
   );
 } 

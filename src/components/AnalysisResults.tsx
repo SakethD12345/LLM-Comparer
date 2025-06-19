@@ -8,11 +8,10 @@ interface AnalysisResultsProps {
 export default function AnalysisResults({ results, isLoading }: AnalysisResultsProps) {
   if (isLoading) {
     return (
-      <div className="p-4 border rounded-lg shadow-sm">
-        <h3 className="text-lg font-semibold mb-2">Analyzing responses...</h3>
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-lg font-semibold text-gray-700">Analyzing responses...</span>
         </div>
       </div>
     );
@@ -22,97 +21,192 @@ export default function AnalysisResults({ results, isLoading }: AnalysisResultsP
     return null;
   }
 
-  const { similarity_score, response1_metrics, response2_metrics, differences } = results;
+  // Handle error case
+  if (results.error) {
+    return (
+      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Analysis Error</h3>
+          <p className="text-gray-600">{results.error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 border rounded-lg shadow-sm">
-      <h3 className="text-lg font-semibold mb-4">Analysis Results</h3>
-      
-      {/* Similarity Score */}
-      <div className="mb-4">
-        <h4 className="font-medium mb-2">Similarity Score</h4>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div
-            className="bg-blue-600 h-2.5 rounded-full"
-            style={{ width: `${similarity_score * 100}%` }}
-          ></div>
-        </div>
-        <p className="text-sm text-gray-600 mt-1">
-          {Math.round(similarity_score * 100)}% similar
-        </p>
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-green-500 to-blue-500 px-6 py-4">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <span>📊</span>
+          Analysis Results
+        </h2>
       </div>
 
-      {/* Readability Metrics */}
-      <div className="mb-4">
-        <h4 className="font-medium mb-2">Readability Metrics</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h5 className="text-sm font-medium mb-1">Response 1</h5>
-            <ul className="text-sm">
-              <li>Avg. Sentence Length: {response1_metrics.readability.avg_sentence_length.toFixed(1)}</li>
-              <li>Avg. Word Length: {response1_metrics.readability.avg_word_length.toFixed(1)}</li>
-              <li>Lexical Diversity: {response1_metrics.readability.lexical_diversity.toFixed(2)}</li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="text-sm font-medium mb-1">Response 2</h5>
-            <ul className="text-sm">
-              <li>Avg. Sentence Length: {response2_metrics.readability.avg_sentence_length.toFixed(1)}</li>
-              <li>Avg. Word Length: {response2_metrics.readability.avg_word_length.toFixed(1)}</li>
-              <li>Lexical Diversity: {response2_metrics.readability.lexical_diversity.toFixed(2)}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Sentiment Analysis */}
-      <div className="mb-4">
-        <h4 className="font-medium mb-2">Sentiment Analysis</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h5 className="text-sm font-medium mb-1">Response 1</h5>
-            <ul className="text-sm">
-              <li>Positive: {response1_metrics.sentiment.pos.toFixed(2)}</li>
-              <li>Neutral: {response1_metrics.sentiment.neu.toFixed(2)}</li>
-              <li>Negative: {response1_metrics.sentiment.neg.toFixed(2)}</li>
-            </ul>
-          </div>
-          <div>
-            <h5 className="text-sm font-medium mb-1">Response 2</h5>
-            <ul className="text-sm">
-              <li>Positive: {response2_metrics.sentiment.pos.toFixed(2)}</li>
-              <li>Neutral: {response2_metrics.sentiment.neu.toFixed(2)}</li>
-              <li>Negative: {response2_metrics.sentiment.neg.toFixed(2)}</li>
-            </ul>
+      <div className="p-6 space-y-6">
+        {/* Similarity Score */}
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border border-blue-100">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span className="text-blue-500">🎯</span>
+            Similarity Score
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-gray-700">Overall Similarity:</span>
+              <span className="text-2xl font-bold text-blue-600">
+                {Math.round(results.similarity_score * 100)}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-1000"
+                style={{ width: `${results.similarity_score * 100}%` }}
+              ></div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Key Phrases */}
-      <div>
-        <h4 className="font-medium mb-2">Key Phrases</h4>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h5 className="text-sm font-medium mb-1">Response 1</h5>
-            <ul className="text-sm">
-              {response1_metrics.key_phrases.map(([phrase, score]: [string, number], index: number) => (
-                <li key={index} className="flex justify-between">
-                  <span>{phrase}</span>
-                  <span className="text-gray-500">{score.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
+        {/* Readability Metrics */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl border border-green-100">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="text-green-500">📖</span>
+              Response 1 Readability
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Avg. Sentence Length:</span>
+                <span className="font-semibold text-gray-800">{results.response1_metrics.readability.avg_sentence_length.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Word Count:</span>
+                <span className="font-semibold text-gray-800">{results.response1_metrics.readability.word_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Avg. Word Length:</span>
+                <span className="font-semibold text-gray-800">{results.response1_metrics.readability.avg_word_length.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Lexical Diversity:</span>
+                <span className="font-semibold text-gray-800">{results.response1_metrics.readability.lexical_diversity.toFixed(2)}</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <h5 className="text-sm font-medium mb-1">Response 2</h5>
-            <ul className="text-sm">
-              {response2_metrics.key_phrases.map(([phrase, score]: [string, number], index: number) => (
-                <li key={index} className="flex justify-between">
-                  <span>{phrase}</span>
-                  <span className="text-gray-500">{score.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
+
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-100">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <span className="text-purple-500">📖</span>
+              Response 2 Readability
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Avg. Sentence Length:</span>
+                <span className="font-semibold text-gray-800">{results.response2_metrics.readability.avg_sentence_length.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Word Count:</span>
+                <span className="font-semibold text-gray-800">{results.response2_metrics.readability.word_count}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Avg. Word Length:</span>
+                <span className="font-semibold text-gray-800">{results.response2_metrics.readability.avg_word_length.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-gray-600">Lexical Diversity:</span>
+                <span className="font-semibold text-gray-800">{results.response2_metrics.readability.lexical_diversity.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sentiment Analysis */}
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl border border-yellow-100">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span className="text-yellow-500">😊</span>
+            Sentiment Analysis
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-semibold text-gray-700 mb-3">Response 1 Sentiment</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Positive:</span>
+                  <span className="font-semibold text-green-600">{Math.round(results.response1_metrics.sentiment.pos * 100)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Neutral:</span>
+                  <span className="font-semibold text-gray-600">{Math.round(results.response1_metrics.sentiment.neu * 100)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Negative:</span>
+                  <span className="font-semibold text-red-600">{Math.round(results.response1_metrics.sentiment.neg * 100)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Compound:</span>
+                  <span className="font-semibold text-blue-600">{results.response1_metrics.sentiment.compound.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-700 mb-3">Response 2 Sentiment</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Positive:</span>
+                  <span className="font-semibold text-green-600">{Math.round(results.response2_metrics.sentiment.pos * 100)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Neutral:</span>
+                  <span className="font-semibold text-gray-600">{Math.round(results.response2_metrics.sentiment.neu * 100)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Negative:</span>
+                  <span className="font-semibold text-red-600">{Math.round(results.response2_metrics.sentiment.neg * 100)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Compound:</span>
+                  <span className="font-semibold text-blue-600">{results.response2_metrics.sentiment.compound.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Key Phrases */}
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-6 rounded-xl border border-indigo-100">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span className="text-indigo-500">🔑</span>
+            Key Phrases
+          </h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-semibold text-gray-700 mb-3">Response 1 Key Phrases</h4>
+              <div className="flex flex-wrap gap-2">
+                {results.response1_metrics.key_phrases.map((phrase: [string, number], index: number) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium"
+                    title={`Score: ${phrase[1].toFixed(3)}`}
+                  >
+                    {phrase[0]}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-700 mb-3">Response 2 Key Phrases</h4>
+              <div className="flex flex-wrap gap-2">
+                {results.response2_metrics.key_phrases.map((phrase: [string, number], index: number) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                    title={`Score: ${phrase[1].toFixed(3)}`}
+                  >
+                    {phrase[0]}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

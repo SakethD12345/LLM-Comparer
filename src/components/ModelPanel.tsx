@@ -62,75 +62,114 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
   const modelInfo = MODEL_INFO[selectedModel];
 
   return (
-    <div className="p-6 border rounded-lg shadow-sm">
-      <h2 className="text-2xl font-semibold mb-4">Model {modelNumber}</h2>
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Select Model
-        </label>
-        <select
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          className="w-full p-2 border rounded-lg"
-        >
-          {AVAILABLE_MODELS.map((model) => (
-            <option key={model} value={model}>
-              {MODEL_INFO[model].name}
-            </option>
-          ))}
-        </select>
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-4">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center text-sm font-bold">
+            {modelNumber}
+          </div>
+          Model {modelNumber}
+        </h2>
       </div>
 
-      {modelInfo && (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <h3 className="font-semibold text-lg mb-2">{modelInfo.name}</h3>
-          <p className="text-sm text-gray-600 mb-2">{modelInfo.description}</p>
-          <div className="mb-2">
-            <span className="text-sm font-medium">Size: </span>
-            <span className="text-sm text-gray-600">{modelInfo.size}</span>
-          </div>
-          <div>
-            <span className="text-sm font-medium">Capabilities: </span>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {modelInfo.capabilities.map((capability) => (
-                <span
-                  key={capability}
-                  className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
-                >
-                  {capability}
-                </span>
-              ))}
+      <div className="p-6 space-y-6">
+        {/* Model Selection */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            🤖 Select Model
+          </label>
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+          >
+            {AVAILABLE_MODELS.map((model) => (
+              <option key={model} value={model}>
+                {MODEL_INFO[model].name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Model Info Card */}
+        {modelInfo && (
+          <div className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-xl border border-gray-100">
+            <h3 className="font-bold text-lg text-gray-800 mb-2 flex items-center gap-2">
+              <span className="text-blue-500">📊</span>
+              {modelInfo.name}
+            </h3>
+            <p className="text-sm text-gray-600 mb-3 leading-relaxed">{modelInfo.description}</p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">📏 Size:</span>
+                <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded-md">{modelInfo.size}</span>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-gray-700 block mb-2">🚀 Capabilities:</span>
+                <div className="flex flex-wrap gap-2">
+                  {modelInfo.capabilities.map((capability) => (
+                    <span
+                      key={capability}
+                      className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-full font-medium"
+                    >
+                      {capability}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Prompt Input */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            💭 Enter Your Prompt
+          </label>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            className="w-full h-32 p-4 border border-gray-200 rounded-xl resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+            placeholder="Type your prompt here... (e.g., 'Explain quantum computing in simple terms')"
+          />
         </div>
-      )}
 
-      <textarea
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        className="w-full h-32 p-4 mb-4 border rounded-lg"
-        placeholder="Enter your prompt here..."
-      />
-
-      <button
-        onClick={handleSubmit}
-        disabled={isLoading || !prompt.trim()}
-        className="w-full p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 mb-4"
-      >
-        {isLoading ? 'Generating...' : 'Generate Response'}
-      </button>
-
-      {response && (
-        <div className="mt-4 p-4 border rounded-lg">
-          <h3 className="font-semibold mb-2">Response:</h3>
-          {response.error ? (
-            <p className="text-red-500">{response.error}</p>
+        {/* Generate Button */}
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading || !prompt.trim()}
+          className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Generating Response...
+            </div>
           ) : (
-            <p className="whitespace-pre-wrap">{response.text}</p>
+            '✨ Generate Response'
           )}
-        </div>
-      )}
+        </button>
+
+        {/* Response Display */}
+        {response && (
+          <div className="mt-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-xl border border-green-200">
+            <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
+              <span className="text-green-500">💬</span>
+              Response
+            </h3>
+            {response.error ? (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 font-medium">❌ {response.error}</p>
+              </div>
+            ) : (
+              <div className="bg-white p-4 rounded-lg border border-gray-200">
+                <p className="whitespace-pre-wrap text-gray-800 leading-relaxed">{response.text}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 } 
