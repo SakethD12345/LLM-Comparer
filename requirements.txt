@@ -14,10 +14,14 @@ pydantic>=2.4.2
 python-multipart>=0.0.6
 httpx>=0.25.0
 
-# Analysis dependencies
+# Advanced Text Analysis dependencies
 pandas>=2.1.0
 spacy>=3.7.0
 textblob>=0.17.1
+
+# Additional ML/NLP dependencies for advanced analysis
+# Note: spacy en_core_web_sm model should be downloaded separately:
+# python -m spacy download en_core_web_sm
 
 # Development dependencies
 pytest>=7.4.0

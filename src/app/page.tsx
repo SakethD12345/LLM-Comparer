@@ -6,6 +6,7 @@ import StorageTest from '@/components/StorageTest';
 import { LLMResponse, ComparisonResult } from '@/types/api';
 import { saveComparisonResults, loadComparisonResults } from '@/lib/storage';
 import AnalysisResults from '@/components/AnalysisResults';
+import AdvancedAnalysisResults from '@/components/AdvancedAnalysisResults';
 
 export default function Home() {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
@@ -13,6 +14,7 @@ export default function Home() {
   const [response2, setResponse2] = useState<LLMResponse | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const [useAdvancedAnalysis, setUseAdvancedAnalysis] = useState(false);
 
   // Load saved results on component mount
   useEffect(() => {
@@ -59,7 +61,8 @@ export default function Home() {
 
     setIsAnalyzing(true);
     try {
-      const response = await fetch('/api/analyze', {
+      const endpoint = useAdvancedAnalysis ? '/api/advanced-analyze' : '/api/analyze';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,21 +121,68 @@ export default function Home() {
           />
         </div>
 
-        {/* Compare Button */}
+        {/* Analysis Controls */}
         {response1 && response2 && (
-          <div className="flex justify-center mb-8">
+          <div className="flex flex-col items-center mb-8 space-y-4">
+            {/* Analysis Type Toggle */}
+            <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-100">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Analysis Type:</span>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setUseAdvancedAnalysis(false)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      !useAdvancedAnalysis
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Basic
+                  </button>
+                  <button
+                    onClick={() => setUseAdvancedAnalysis(true)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                      useAdvancedAnalysis
+                        ? 'bg-white text-purple-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Advanced
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                {useAdvancedAnalysis 
+                  ? 'Advanced analysis includes NER, topic modeling, and semantic similarity'
+                  : 'Basic analysis includes sentiment, readability, and key phrases'
+                }
+              </p>
+            </div>
+
+            {/* Compare Button */}
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg hover:from-blue-600 hover:to-purple-600 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className={`px-8 py-4 text-white rounded-xl font-semibold text-lg shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                useAdvancedAnalysis
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
+                  : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'
+              }`}
             >
               {isAnalyzing ? (
                 <div className="flex items-center gap-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Analyzing...
+                  <span className="text-white">
+                    {useAdvancedAnalysis ? 'Performing Advanced Analysis...' : 'Analyzing...'}
+                  </span>
                 </div>
               ) : (
-                '🔍 Compare Responses'
+                <div className="flex items-center gap-2">
+                  <span>{useAdvancedAnalysis ? '🧠' : '🔍'}</span>
+                  <span className="text-white">
+                    {useAdvancedAnalysis ? 'Advanced Analysis' : 'Compare Responses'}
+                  </span>
+                </div>
               )}
             </button>
           </div>
@@ -140,8 +190,12 @@ export default function Home() {
 
         {/* Analysis Results */}
         {analysisResults && (
-          <div className="max-w-4xl mx-auto">
-            <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
+          <div className="max-w-6xl mx-auto">
+            {useAdvancedAnalysis ? (
+              <AdvancedAnalysisResults results={analysisResults} isLoading={isAnalyzing} />
+            ) : (
+              <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
+            )}
           </div>
         )}
 
