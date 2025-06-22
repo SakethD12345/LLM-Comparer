@@ -2,14 +2,23 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { prompt, model } = await request.json();
+    const { prompt, model, conversation_history } = await request.json();
     console.log('Received request for model:', model);
+    console.log('Conversation history length:', conversation_history?.length || 0);
+
+    // Prepare the request body
+    const requestBody: any = { prompt, model };
+    
+    // Add conversation history if provided
+    if (conversation_history && Array.isArray(conversation_history)) {
+      requestBody.conversation_history = conversation_history;
+    }
 
     // Forward request to FastAPI backend
     const response = await fetch("http://127.0.0.1:8000/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, model }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {

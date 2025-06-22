@@ -5,13 +5,36 @@ A modern web application for comparing responses from different Large Language M
 ## Features
 
 - **Side-by-side model comparison** with real-time response generation
+- **Conversation continuation mode** for extended multi-turn conversations
 - **Local model inference** using Ollama
 - **Two-tier analysis system**:
   - **Basic Analysis**: Sentiment analysis, readability metrics, key phrase extraction
   - **Advanced Analysis**: Named Entity Recognition (NER), topic modeling, semantic similarity using TF-IDF and LSI
+- **Conversation analysis** with response patterns, consistency metrics, and flow visualization
 - **Response history tracking** with local storage
+- **Multiple conversation management** with save, load, and delete functionality
 - **Modern, responsive UI** with beautiful gradients and animations
 - **Type-safe development** with TypeScript
+
+## Conversation Mode
+
+### 💬 Extended Conversations
+- **Multi-turn conversations** with both models simultaneously
+- **Context preservation** - models maintain conversation history
+- **Real-time responses** from both models for each user message
+- **Conversation management** - create, save, and switch between conversations
+
+### 📊 Conversation Analysis
+- **Response consistency** analysis for each model
+- **Conversation flow visualization** showing turn-by-turn interaction
+- **Response time patterns** and average response lengths
+- **Model behavior insights** across extended conversations
+- **Turn-by-turn analysis** with visual indicators
+
+### 🔄 Mode Switching
+- **Seamless switching** between single comparison and conversation modes
+- **Preserved state** - conversations and analysis results are maintained
+- **Unified interface** with mode-specific features and controls
 
 ## Advanced Analysis Features
 
@@ -89,6 +112,7 @@ python setup.py
 
 ## Usage
 
+### Single Comparison Mode
 1. **Select Models**: Choose two different models from the dropdown menus
 2. **Enter Prompt**: Type your prompt in the text area
 3. **Generate Responses**: Click "Generate Response" to get responses from both models
@@ -97,6 +121,14 @@ python setup.py
    - **Advanced**: Comprehensive NLP analysis with NER and topic modeling
 5. **Compare Responses**: Click the analysis button to view detailed comparisons
 6. **Review Results**: Explore similarity scores, entities, topics, and complexity metrics
+
+### Conversation Mode
+1. **Switch to Conversation Mode**: Use the mode selector to switch to conversation mode
+2. **Start New Conversation**: Click "New Chat" to begin a new conversation
+3. **Send Messages**: Type messages and both models will respond with context
+4. **View Analysis**: Switch to the Analysis tab to see conversation insights
+5. **Manage Conversations**: Use the sidebar to switch between saved conversations
+6. **Compare Patterns**: Analyze how models behave over extended conversations
 
 ## Tech Stack
 
@@ -125,17 +157,24 @@ src/
 ├── app/                    # Next.js app directory
 │   ├── api/               # API routes
 │   │   ├── analyze/       # Basic analysis endpoint
-│   │   └── advanced-analyze/  # Advanced analysis endpoint
+│   │   ├── advanced-analyze/  # Advanced analysis endpoint
+│   │   └── generate/      # Model generation endpoint
 │   └── page.tsx           # Main page component
 ├── components/            # React components
 │   ├── ModelPanel.tsx     # Model selection and response display
 │   ├── AnalysisResults.tsx        # Basic analysis results
-│   └── AdvancedAnalysisResults.tsx # Advanced analysis results
+│   ├── AdvancedAnalysisResults.tsx # Advanced analysis results
+│   ├── ConversationPanel.tsx      # Conversation interface
+│   ├── ConversationList.tsx       # Conversation management
+│   ├── ConversationAnalysis.tsx   # Conversation insights
+│   └── ModeSelector.tsx           # Mode switching
 ├── lib/                   # Core functionality
 │   ├── api.ts            # API client functions
+│   ├── storage.ts        # Local storage utilities
 │   ├── advanced_analysis.py      # Basic analysis script
 │   └── advanced_text_analysis.py # Advanced NLP analysis
 └── types/                 # TypeScript type definitions
+    └── api.ts            # API and data types
 ```
 
 ## Development
@@ -189,6 +228,13 @@ Calculates multiple similarity metrics:
 - **LSI**: Latent Semantic Indexing similarity
 - **Word Overlap**: Jaccard similarity of word sets
 - **Average**: Combined similarity score
+
+### Conversation Analysis
+Provides insights into model behavior over time:
+- **Response Consistency**: Measures how consistent each model's responses are
+- **Conversation Flow**: Visual representation of turn-by-turn interactions
+- **Response Patterns**: Analysis of response lengths and timing
+- **Model Comparison**: Side-by-side comparison of model performance in conversations
 
 ## License
 
