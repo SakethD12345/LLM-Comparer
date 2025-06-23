@@ -10,6 +10,7 @@ export interface ConversationTurn {
   content: string;
   timestamp: string;
   turnId: string;
+  error?: string; // for error messages
 }
 
 export interface Conversation {

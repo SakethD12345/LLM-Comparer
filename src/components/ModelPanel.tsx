@@ -31,7 +31,8 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate response');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -50,7 +51,7 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
       const errorResponse: LLMResponse = {
         text: '',
         model: selectedModel,
-        error: 'Failed to generate response',
+        error: error instanceof Error ? error.message : 'Failed to generate response',
       };
       setResponse(errorResponse);
       onResponse(errorResponse);

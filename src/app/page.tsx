@@ -111,12 +111,12 @@ export default function Home() {
   };
 
   // Conversation functions
-  const createNewConversation = () => {
+  const createNewConversation = (model1?: string, model2?: string) => {
     const newConversation: Conversation = {
       id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       turns: [],
-      model1: 'llama2', // Default models - could be made configurable
-      model2: 'mistral',
+      model1: model1 || 'llama2', // Use provided models or defaults
+      model2: model2 || 'mistral',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -137,6 +137,23 @@ export default function Home() {
     if (currentConversation?.id === conversationId) {
       setCurrentConversation(null);
     }
+  };
+
+  const updateConversationModels = (model1: string, model2: string) => {
+    if (!currentConversation) return;
+
+    const updatedConversation = {
+      ...currentConversation,
+      model1,
+      model2,
+      updatedAt: new Date().toISOString(),
+    };
+
+    setCurrentConversation(updatedConversation);
+    setConversations(prev => 
+      prev.map(c => c.id === updatedConversation.id ? updatedConversation : c)
+    );
+    saveConversation(updatedConversation);
   };
 
   const sendConversationMessage = async (message: string) => {
@@ -165,8 +182,8 @@ export default function Home() {
       );
       saveConversation(updatedConversation);
 
-      // Get responses from both models
-      const [response1, response2] = await Promise.all([
+      // Get responses from both models with proper error handling
+      const [response1, response2] = await Promise.allSettled([
         fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -178,7 +195,13 @@ export default function Home() {
               content: turn.content
             }))
           }),
-        }).then(res => res.json()),
+        }).then(async (res) => {
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        }),
         fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -190,24 +213,36 @@ export default function Home() {
               content: turn.content
             }))
           }),
-        }).then(res => res.json()),
+        }).then(async (res) => {
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+          }
+          return res.json();
+        }),
       ]);
 
-      // Add model responses to conversation
+      // Add model responses to conversation with error handling
       const model1Turn: ConversationTurn = {
         role: 'assistant',
         model: currentConversation.model1,
-        content: response1.text || 'Error: No response',
+        content: response1.status === 'fulfilled' 
+          ? (response1.value.text || 'Error: No response received')
+          : `Error: ${response1.reason.message || 'Failed to get response'}`,
         timestamp: new Date().toISOString(),
         turnId: `turn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        error: response1.status === 'rejected' ? response1.reason.message : undefined,
       };
 
       const model2Turn: ConversationTurn = {
         role: 'assistant',
         model: currentConversation.model2,
-        content: response2.text || 'Error: No response',
+        content: response2.status === 'fulfilled' 
+          ? (response2.value.text || 'Error: No response received')
+          : `Error: ${response2.reason.message || 'Failed to get response'}`,
         timestamp: new Date().toISOString(),
         turnId: `turn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        error: response2.status === 'rejected' ? response2.reason.message : undefined,
       };
 
       const finalConversation = {
@@ -224,6 +259,27 @@ export default function Home() {
 
     } catch (error) {
       console.error('Error sending conversation message:', error);
+      
+      // Add error message to conversation
+      const errorTurn: ConversationTurn = {
+        role: 'assistant',
+        content: `System Error: ${error instanceof Error ? error.message : 'An unexpected error occurred'}`,
+        timestamp: new Date().toISOString(),
+        turnId: `turn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        error: error instanceof Error ? error.message : 'An unexpected error occurred',
+      };
+
+      const errorConversation = {
+        ...currentConversation,
+        turns: [...currentConversation.turns, errorTurn],
+        updatedAt: new Date().toISOString(),
+      };
+
+      setCurrentConversation(errorConversation);
+      setConversations(prev => 
+        prev.map(c => c.id === errorConversation.id ? errorConversation : c)
+      );
+      saveConversation(errorConversation);
     } finally {
       setIsConversationLoading(false);
     }
@@ -279,7 +335,8 @@ export default function Home() {
                 <ConversationPanel
                   conversation={currentConversation}
                   onSendMessage={sendConversationMessage}
-                  onNewConversation={createNewConversation}
+                  onNewConversation={() => createNewConversation()}
+                  onUpdateModels={updateConversationModels}
                   isLoading={isConversationLoading}
                 />
               ) : (
@@ -288,7 +345,7 @@ export default function Home() {
                   <h3 className="text-xl font-bold text-gray-800 mb-2">No Conversation Selected</h3>
                   <p className="text-gray-600 mb-6">Select a conversation from the sidebar or start a new one</p>
                   <button
-                    onClick={createNewConversation}
+                    onClick={() => createNewConversation()}
                     className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-600 transition-all"
                   >
                     Start New Conversation
