@@ -7,6 +7,7 @@ import { LLMResponse, ComparisonResult, Conversation, ConversationTurn } from '@
 import { saveComparisonResults, loadComparisonResults, saveConversation, loadConversations, deleteConversation } from '@/lib/storage';
 import AnalysisResults from '@/components/AnalysisResults';
 import AdvancedAnalysisResults from '@/components/AdvancedAnalysisResults';
+import ComplexityAnalysisResults from '@/components/ComplexityAnalysisResults';
 import ConversationPanel from '@/components/ConversationPanel';
 import ModeSelector from '@/components/ModeSelector';
 import ConversationList from '@/components/ConversationList';
@@ -18,6 +19,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<any>(null);
   const [useAdvancedAnalysis, setUseAdvancedAnalysis] = useState(false);
+  const [analysisType, setAnalysisType] = useState<'basic' | 'advanced' | 'complexity'>('basic');
   
   // Conversation state
   const [isConversationMode, setIsConversationMode] = useState(false);
@@ -83,7 +85,13 @@ export default function Home() {
 
     setIsAnalyzing(true);
     try {
-      const endpoint = useAdvancedAnalysis ? '/api/advanced-analyze' : '/api/analyze';
+      let endpoint = '/api/analyze';
+      if (analysisType === 'advanced') {
+        endpoint = '/api/advanced-analyze';
+      } else if (analysisType === 'complexity') {
+        endpoint = '/api/complexity-analyze';
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -379,9 +387,9 @@ export default function Home() {
                     <span className="text-sm font-medium text-gray-700">Analysis Type:</span>
                     <div className="flex bg-gray-100 rounded-lg p-1">
                       <button
-                        onClick={() => setUseAdvancedAnalysis(false)}
+                        onClick={() => setAnalysisType('basic')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                          !useAdvancedAnalysis
+                          analysisType === 'basic'
                             ? 'bg-white text-blue-600 shadow-sm'
                             : 'text-gray-600 hover:text-gray-800'
                         }`}
@@ -389,20 +397,32 @@ export default function Home() {
                         Basic
                       </button>
                       <button
-                        onClick={() => setUseAdvancedAnalysis(true)}
+                        onClick={() => setAnalysisType('advanced')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                          useAdvancedAnalysis
+                          analysisType === 'advanced'
                             ? 'bg-white text-purple-600 shadow-sm'
                             : 'text-gray-600 hover:text-gray-800'
                         }`}
                       >
                         Advanced
                       </button>
+                      <button
+                        onClick={() => setAnalysisType('complexity')}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                          analysisType === 'complexity'
+                            ? 'bg-white text-green-600 shadow-sm'
+                            : 'text-gray-600 hover:text-gray-800'
+                        }`}
+                      >
+                        Complexity
+                      </button>
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2 text-center">
-                    {useAdvancedAnalysis 
+                    {analysisType === 'advanced' 
                       ? 'Advanced analysis includes NER, topic modeling, and semantic similarity'
+                      : analysisType === 'complexity'
+                      ? 'Complexity analysis includes lexical diversity, syntactic complexity, and readability scores'
                       : 'Basic analysis includes sentiment, readability, and key phrases'
                     }
                   </p>
@@ -413,8 +433,10 @@ export default function Home() {
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
                   className={`px-8 py-4 text-white rounded-xl font-semibold text-lg shadow-lg transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
-                    useAdvancedAnalysis
+                    analysisType === 'advanced'
                       ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
+                      : analysisType === 'complexity'
+                      ? 'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600'
                       : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600'
                   }`}
                 >
@@ -422,14 +444,17 @@ export default function Home() {
                     <div className="flex items-center gap-2">
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-white">
-                        {useAdvancedAnalysis ? 'Performing Advanced Analysis...' : 'Analyzing...'}
+                        {analysisType === 'advanced' ? 'Performing Advanced Analysis...' : 
+                         analysisType === 'complexity' ? 'Analyzing Complexity...' : 'Analyzing...'}
                       </span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span>{useAdvancedAnalysis ? '🧠' : '🔍'}</span>
+                      <span>{analysisType === 'advanced' ? '🧠' : 
+                             analysisType === 'complexity' ? '📊' : '🔍'}</span>
                       <span className="text-white">
-                        {useAdvancedAnalysis ? 'Advanced Analysis' : 'Compare Responses'}
+                        {analysisType === 'advanced' ? 'Advanced Analysis' : 
+                         analysisType === 'complexity' ? 'Complexity Analysis' : 'Compare Responses'}
                       </span>
                     </div>
                   )}
@@ -440,8 +465,10 @@ export default function Home() {
             {/* Analysis Results */}
             {analysisResults && (
               <div className="max-w-6xl mx-auto">
-                {useAdvancedAnalysis ? (
+                {analysisType === 'advanced' ? (
                   <AdvancedAnalysisResults results={analysisResults} isLoading={isAnalyzing} />
+                ) : analysisType === 'complexity' ? (
+                  <ComplexityAnalysisResults analysis={analysisResults} isLoading={isAnalyzing} />
                 ) : (
                   <AnalysisResults results={analysisResults} isLoading={isAnalyzing} />
                 )}
