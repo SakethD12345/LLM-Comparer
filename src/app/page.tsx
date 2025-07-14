@@ -413,6 +413,7 @@ export default function Home() {
                             ? 'bg-white text-green-600 shadow-sm'
                             : 'text-gray-600 hover:text-gray-800'
                         }`}
+                        title="Analyze text complexity including lexical diversity, syntax, and readability"
                       >
                         Complexity
                       </button>
