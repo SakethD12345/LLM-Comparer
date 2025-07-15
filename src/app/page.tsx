@@ -11,6 +11,7 @@ import ComplexityAnalysisResults from '@/components/ComplexityAnalysisResults';
 import ConversationPanel from '@/components/ConversationPanel';
 import ModeSelector from '@/components/ModeSelector';
 import ConversationList from '@/components/ConversationList';
+import Leaderboard from '@/components/Leaderboard';
 
 export default function Home() {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
@@ -313,6 +314,11 @@ export default function Home() {
             Compare responses from different language models side by side. 
             Generate responses, analyze similarities, and gain insights into model performance.
           </p>
+        </div>
+
+        {/* Leaderboard */}
+        <div className="mb-12">
+          <Leaderboard />
         </div>
 
         {/* Mode Selector */}
