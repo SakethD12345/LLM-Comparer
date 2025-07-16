@@ -52,14 +52,83 @@ export default function AnalysisResults({ results, isLoading }: AnalysisResultsP
     return value.toString();
   };
 
+  // Export as JSON
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(results, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'analysis_results.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Export as CSV (flattened for main metrics)
+  const handleExportCSV = () => {
+    // Helper to safely get value
+    const safe = (v: any) => (v === undefined || v === null ? '' : v);
+    // Flatten main metrics for CSV
+    const csvRows = [
+      [
+        'Similarity Score',
+        'Response1 Avg Sentence Length', 'Response1 Word Count', 'Response1 Avg Word Length', 'Response1 Lexical Diversity',
+        'Response1 Sentiment Pos', 'Response1 Sentiment Neu', 'Response1 Sentiment Neg', 'Response1 Sentiment Compound',
+        'Response2 Avg Sentence Length', 'Response2 Word Count', 'Response2 Avg Word Length', 'Response2 Lexical Diversity',
+        'Response2 Sentiment Pos', 'Response2 Sentiment Neu', 'Response2 Sentiment Neg', 'Response2 Sentiment Compound',
+      ],
+      [
+        safe(results.similarity_score),
+        safe(results.response1_metrics?.readability?.avg_sentence_length),
+        safe(results.response1_metrics?.readability?.word_count),
+        safe(results.response1_metrics?.readability?.avg_word_length),
+        safe(results.response1_metrics?.readability?.lexical_diversity),
+        safe(results.response1_metrics?.sentiment?.pos),
+        safe(results.response1_metrics?.sentiment?.neu),
+        safe(results.response1_metrics?.sentiment?.neg),
+        safe(results.response1_metrics?.sentiment?.compound),
+        safe(results.response2_metrics?.readability?.avg_sentence_length),
+        safe(results.response2_metrics?.readability?.word_count),
+        safe(results.response2_metrics?.readability?.avg_word_length),
+        safe(results.response2_metrics?.readability?.lexical_diversity),
+        safe(results.response2_metrics?.sentiment?.pos),
+        safe(results.response2_metrics?.sentiment?.neu),
+        safe(results.response2_metrics?.sentiment?.neg),
+        safe(results.response2_metrics?.sentiment?.compound),
+      ],
+    ];
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'analysis_results.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-blue-500 px-6 py-4">
+      <div className="bg-gradient-to-r from-green-500 to-blue-500 px-6 py-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <span>📊</span>
           Analysis Results
         </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="px-3 py-1 bg-white text-blue-600 border border-blue-300 rounded hover:bg-blue-50 text-sm font-semibold transition"
+          >
+            Export as CSV
+          </button>
+          <button
+            onClick={handleExportJSON}
+            className="px-3 py-1 bg-white text-green-600 border border-green-300 rounded hover:bg-green-50 text-sm font-semibold transition"
+          >
+            Export as JSON
+          </button>
+        </div>
       </div>
 
       <div className="p-6 space-y-6">
