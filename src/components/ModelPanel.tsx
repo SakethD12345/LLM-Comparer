@@ -176,7 +176,7 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
         </div>
 
         {/* Model Info Card */}
-        {modelInfo && (
+        {backend === 'ollama' && modelInfo && (
           <div className="bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-xl border border-gray-100">
             <h3 className="font-bold text-lg text-gray-800 mb-2 flex items-center gap-2">
               <span className="text-blue-500">📊</span>
@@ -201,6 +201,27 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+        
+        {backend === 'litellm' && currentLiteLLMModel && (
+          <div className="bg-gradient-to-br from-gray-50 to-purple-50 p-4 rounded-xl border border-gray-100">
+            <h3 className="font-bold text-lg text-gray-800 mb-2 flex items-center gap-2">
+              <span className="text-purple-500">🚀</span>
+              {currentLiteLLMModel.display_name}
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">🏢 Provider:</span>
+                <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded-md capitalize">{currentLiteLLMModel.provider}</span>
+              </div>
+              {currentLiteLLMModel.requires_api_key && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">🔑 Status:</span>
+                  <span className="text-sm text-orange-600 bg-orange-50 px-2 py-1 rounded-md">API Key Required</span>
+                </div>
+              )}
             </div>
           </div>
         )}
