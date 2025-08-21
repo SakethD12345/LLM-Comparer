@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AVAILABLE_MODELS, MODEL_INFO } from '@/lib/api';
 import { LLMResponse } from '@/types/api';
 
@@ -8,17 +8,48 @@ interface ModelPanelProps {
   otherResponse?: LLMResponse | null;
 }
 
+interface LiteLLMModel {
+  provider: string;
+  model: string;
+  display_name: string;
+  requires_api_key: boolean;
+}
+
 export default function ModelPanel({ modelNumber, onResponse, otherResponse }: ModelPanelProps) {
   const [prompt, setPrompt] = useState('');
   const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0]);
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<LLMResponse | null>(null);
+  const [backend, setBackend] = useState<'ollama' | 'litellm'>('ollama');
+  const [litellmModels, setLitellmModels] = useState<LiteLLMModel[]>([]);
+  const [selectedLiteLLMModel, setSelectedLiteLLMModel] = useState<string>('');
+
+  useEffect(() => {
+    if (backend === 'litellm') {
+      fetchLiteLLMModels();
+    }
+  }, [backend]);
+
+  const fetchLiteLLMModels = async () => {
+    try {
+      const response = await fetch('/api/generate');
+      const data = await response.json();
+      setLitellmModels(data.models || []);
+      if (data.models && data.models.length > 0) {
+        setSelectedLiteLLMModel(data.models[0].model);
+      }
+    } catch (error) {
+      console.error('Failed to fetch LiteLLM models:', error);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!prompt.trim()) return;
 
     setIsLoading(true);
     try {
+      const modelToUse = backend === 'litellm' ? selectedLiteLLMModel : selectedModel;
+      
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -26,13 +57,14 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
         },
         body: JSON.stringify({
           prompt,
-          model: selectedModel,
+          model: modelToUse,
+          backend,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -40,7 +72,7 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
 
       const llmResponse: LLMResponse = {
         text: data.response || data.text || '', // Try both possible response formats
-        model: selectedModel,
+        model: modelToUse,
       };
       console.log('Formatted Response:', llmResponse); // Debug log
       
@@ -50,7 +82,7 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
       console.error('Error generating response:', error);
       const errorResponse: LLMResponse = {
         text: '',
-        model: selectedModel,
+        model: backend === 'litellm' ? selectedLiteLLMModel : selectedModel,
         error: error instanceof Error ? error.message : 'Failed to generate response',
       };
       setResponse(errorResponse);
@@ -60,7 +92,8 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
     }
   };
 
-  const modelInfo = MODEL_INFO[selectedModel];
+  const modelInfo = backend === 'ollama' ? MODEL_INFO[selectedModel] : null;
+  const currentLiteLLMModel = litellmModels.find(m => m.model === selectedLiteLLMModel);
 
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
@@ -75,22 +108,71 @@ export default function ModelPanel({ modelNumber, onResponse, otherResponse }: M
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Backend Selection */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            🔧 Backend Provider
+          </label>
+          <div className="flex gap-4">
+            <button
+              onClick={() => setBackend('ollama')}
+              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                backend === 'ollama'
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Ollama (Local)
+            </button>
+            <button
+              onClick={() => setBackend('litellm')}
+              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                backend === 'litellm'
+                  ? 'bg-blue-500 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              LiteLLM (Multi-Provider)
+            </button>
+          </div>
+        </div>
+
         {/* Model Selection */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-3">
             🤖 Select Model
           </label>
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-          >
-            {AVAILABLE_MODELS.map((model) => (
-              <option key={model} value={model}>
-                {MODEL_INFO[model].name}
-              </option>
-            ))}
-          </select>
+          {backend === 'ollama' ? (
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+            >
+              {AVAILABLE_MODELS.map((model) => (
+                <option key={model} value={model}>
+                  {MODEL_INFO[model].name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <select
+              value={selectedLiteLLMModel}
+              onChange={(e) => setSelectedLiteLLMModel(e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+              disabled={litellmModels.length === 0}
+            >
+              {litellmModels.length === 0 ? (
+                <option>Loading models...</option>
+              ) : (
+                litellmModels.map((model) => (
+                  <option key={model.model} value={model.model}>
+                    {model.display_name} ({model.provider})
+                    {model.requires_api_key && ' - API Key Required'}
+                  </option>
+                ))
+              )}
+            </select>
+          )}
         </div>
 
         {/* Model Info Card */}

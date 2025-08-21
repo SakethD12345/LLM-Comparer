@@ -15,6 +15,11 @@ pydantic>=2.4.2
 python-multipart>=0.0.6
 httpx>=0.25.0
 
+# LiteLLM for multi-provider LLM support
+litellm>=1.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
 # Advanced Text Analysis dependencies
 pandas>=2.1.0
 spacy>=3.7.0
